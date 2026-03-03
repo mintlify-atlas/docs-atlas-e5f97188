@@ -61,7 +61,7 @@ graph TD
 </Steps>
 
 **Cost-Benefit Analysis** (using simulator defaults):
-```
+```text
 Monthly COD Orders: 6,000
 OTP Cost: ₹0.25 per order
 Monthly OTP Cost: 6,000 × ₹0.25 = ₹1,500
@@ -309,7 +309,7 @@ ROI: 17,260%
 
 **Impact Simulation** (using RTO Profit Simulator defaults):
 
-```
+```text
 Scenario: Implement 20% partial COD, expecting RTO to drop from 30% to 15%
 
 Before:
@@ -493,7 +493,7 @@ Example: 1,800 RTO orders → 900 are genuine NDR (customer unavailable/address 
 
 <Accordion title="Basic: Preferred Time Collection">
 At checkout, ask:
-```
+```text
 Preferred delivery time:
 [ ] Morning (10 AM - 1 PM)
 [ ] Afternoon (1 PM - 5 PM)  
@@ -510,7 +510,7 @@ Integrate with logistics partners offering slot delivery:
 - Charge premium for specific slots
 
 Example:
-```
+```text
 [ ] Standard Delivery (Free) - 3-5 days, anytime
 [ ] Scheduled Delivery (+₹30) - Choose date & time
 ```
@@ -543,7 +543,7 @@ Partners: Dunzo, Shadowfax, WeFast
 - Enable UPI QR code on delivery
 
 **Customer Communication**:
-```
+```text
 You can pay via:
 💵 Cash
 📱 UPI (Google Pay, PhonePe, Paytm)
@@ -591,7 +591,7 @@ You can pay via:
 **Best for**: High AOV businesses (₹1,500+)
 
 **Calculation** (using simulator defaults):
-```
+```text
 AOV: ₹1,500
 Discount: ₹100 (6.67%)
 
@@ -630,7 +630,7 @@ If 10% of COD customers (600 orders) convert:
 
 <Tip>
 **Optimization**: Show prepaid discount prominently at checkout:
-```
+```text
 💰 Save ₹100 - Pay online now!
 
 [Pay Online - ₹1,400] ← Highlighted in green
@@ -653,13 +653,13 @@ A/B test different discount amounts to find optimal conversion.
 - Typical COD reduction: **15-25%**
 
 **Example Pricing**:
-```
+```text
 🆓 Prepaid: Free Delivery
 💵 COD: ₹60 delivery charges
 ```
 
 **Financial Logic**:
-```
+```text
 COD Order Cost: Forward ₹60 + Return ₹60 + 30% RTO probability
 Expected Cost per COD Order: ₹60 + (30% × ₹60) = ₹78
 
