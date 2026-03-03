@@ -1,0 +1,167 @@
+---
+title: RTO Reduction Simulator
+description: Interactive tool to model profit improvements by reducing your RTO percentage
+---
+
+The RTO Reduction Simulator is an interactive feature that allows you to visualize potential savings by reducing your current RTO rate. This is the core "what-if" analysis tool in the application.
+
+## Component Location
+
+Implemented in: `src/components/SimulationSection.jsx:12-72`
+
+## How It Works
+
+The simulator uses an interactive range slider to let you specify how much you want to reduce your current RTO percentage, then calculates the financial impact of that reduction.
+
+### Interactive Slider
+
+```jsx
+<input
+  type="range"
+  min="0"
+  max="50"
+  step="1"
+  value={sliderValue}
+  onChange={(e) => setSliderValue(parseInt(e.target.value))}
+  className="slider"
+/>
+```
+
+**Parameters**:
+- **Range**: 0% to 50% reduction
+- **Step**: 1% increments
+- **Default**: 10% reduction
+- **Code Reference**: `SimulationSection.jsx:35-42`
+
+<Info>
+  The slider represents an **absolute reduction**, not a relative one. For example, if your current RTO is 30% and you select a 10% reduction, your target RTO becomes 20% (not 27%).
+</Info>
+
+### Live Calculation Display
+
+As you move the slider, the interface shows:
+
+```jsx
+Reduce by {sliderValue}% (Target RTO: {Math.max(0, data.rtoPercentage - sliderValue)}%)
+```
+
+**Example**: Current RTO = 30%, Slider = 15% → Target RTO = 15%
+
+## Savings Calculation
+
+The `calculateSavings()` function (`calculations.js:59-71`) compares your current metrics against the reduced RTO scenario:
+
+```javascript
+export const calculateSavings = (data, reductionPercent, isAnnual = false) => {
+  const newRtoPercentage = Math.max(0, data.rtoPercentage - reductionPercent);
+  
+  const originalMetrics = calculateMetrics(data, isAnnual);
+  const newMetrics = calculateMetrics({ ...data, rtoPercentage: newRtoPercentage }, isAnnual);
+  
+  return {
+    savedOrders: originalMetrics.rtoOrders - newMetrics.rtoOrders,
+    profitImprovement: newMetrics.netProfitAfterRto - originalMetrics.netProfitAfterRto,
+  };
+};
+```
+
+### Output Metrics
+
+1. **Profit Improvement**: Increase in net profit after RTO by reducing the RTO rate
+2. **Saved Orders**: Number of orders that would be successfully delivered instead of returned
+
+<Tip>
+  The profit improvement calculation accounts for both reduced RTO losses AND increased realized revenue from saved orders.
+</Tip>
+
+## Savings Card Display
+
+The main savings card (`SimulationSection.jsx:45-51`) prominently displays:
+
+```jsx
+<div className="savings-card">
+  <div className="savings-label">Potential {isAnnual ? 'Annual' : 'Monthly'} Savings</div>
+  <div className="savings-value">{formatCurrency(currentSavings.profitImprovement)}</div>
+  <div>Saving {currentSavings.savedOrders} orders from RTO</div>
+</div>
+```
+
+**Example Output**:
+- Potential Monthly Savings: ₹2,34,000
+- Saving 780 orders from RTO
+
+## Quick Projections Grid
+
+Below the slider, three preset scenarios are shown for quick reference (`SimulationSection.jsx:54-67`):
+
+| Scenario | Calculation |
+|----------|-------------|
+| If RTO drops by 5% | `calculateSavings(data, 5, isAnnual).profitImprovement` |
+| If RTO drops by 10% | `calculateSavings(data, 10, isAnnual).profitImprovement` |
+| If RTO drops by 15% | `calculateSavings(data, 15, isAnnual).profitImprovement` |
+
+These provide benchmarks for common reduction targets without requiring slider interaction.
+
+<Note>
+  The preset projections (5%, 10%, 15%) remain fixed regardless of the slider position, allowing users to quickly compare standard reduction scenarios.
+</Note>
+
+## Real-World Example
+
+**Current State**:
+- Monthly Orders: 10,000
+- COD Percentage: 60% (6,000 COD orders)
+- RTO Percentage: 30% (1,800 RTO orders)
+- RTO Loss per Order: ₹620 (₹60 forward + ₹60 return + ₹500 product)
+- Current Total RTO Loss: ₹11,16,000
+
+**After 10% Reduction** (RTO drops from 30% to 20%):
+- New RTO Orders: 1,200 (600 orders saved)
+- New Total RTO Loss: ₹7,44,000
+- Direct Loss Reduction: ₹3,72,000
+- Revenue from Saved Orders: 600 × ₹1,500 = ₹9,00,000
+- **Net Profit Improvement: ₹3,72,000 + ₹9,00,000 = ₹12,72,000/month**
+
+<Warning>
+  Profit improvement is not just the reduction in RTO loss—it also includes the revenue gained from successfully delivering previously returned orders.
+</Warning>
+
+## Currency Formatting
+
+All monetary values use Indian Rupee formatting:
+
+```javascript
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(value);
+};
+```
+
+**Output**: ₹12,72,000 (with commas in Indian numbering system)
+
+## Use Cases
+
+1. **Goal Setting**: Determine target RTO reduction to achieve specific profit goals
+2. **Investment Justification**: Calculate ROI for RTO reduction initiatives (fraud prevention, address verification, etc.)
+3. **Scenario Planning**: Model multiple reduction scenarios to prioritize optimization efforts
+4. **Stakeholder Communication**: Show executives the financial impact of improving fulfillment operations
+
+## Integration with Other Features
+
+The simulator works in conjunction with:
+- **AI Insights**: Provides actionable recommendations to achieve the modeled reductions
+- **Visual Analytics**: Charts show before/after comparisons based on simulated improvements
+- **PDF Export**: Includes optimization projections in exported reports
+
+## Monthly vs Annual Toggle
+
+The simulator respects the global monthly/annual view toggle (`App.jsx:169-183`), automatically scaling all savings calculations by 12x for annual projections.
+
+```jsx
+const currentSavings = calculateSavings(data, sliderValue, isAnnual);
+```
+
+This allows you to quickly understand both short-term and long-term financial impact.

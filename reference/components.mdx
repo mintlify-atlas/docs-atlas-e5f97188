@@ -1,0 +1,559 @@
+---
+title: 'Components Reference'
+description: 'Complete API reference for all React components in the RTO Profit Simulator'
+---
+
+## Overview
+
+The RTO Profit Simulator is built with modular React components. All components are located in `src/components/` and follow a functional component pattern with hooks.
+
+---
+
+## InputSection
+
+Collects and manages user business inputs for RTO calculations.
+
+**Location:** `src/components/InputSection.jsx`
+
+### Props
+
+<ParamField path="data" type="object" required>
+  Current business input values
+  ```javascript
+  {
+    monthlyOrders: number,
+    averageOrderValue: number,
+    codPercentage: number,
+    rtoPercentage: number,
+    forwardShippingCost: number,
+    returnShippingCost: number,
+    productCost: number
+  }
+  ```
+</ParamField>
+
+<ParamField path="onChange" type="function" required>
+  Callback when input values change
+  
+  **Signature:** `(name: string, value: number) => void`
+</ParamField>
+
+<ParamField path="onReset" type="function" required>
+  Callback when reset button is clicked
+  
+  **Signature:** `() => void`
+</ParamField>
+
+### Usage Example
+
+```jsx
+import InputSection from './components/InputSection'
+
+function App() {
+  const [data, setData] = useState(defaultData)
+
+  const handleDataChange = (name, value) => {
+    setData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleReset = () => {
+    setData(defaultData)
+  }
+
+  return (
+    <InputSection 
+      data={data} 
+      onChange={handleDataChange} 
+      onReset={handleReset} 
+    />
+  )
+}
+```
+
+### Features
+
+- Input validation with min/max constraints
+- Formatted inputs with currency (₹) and percentage (%) prefixes/suffixes
+- Real-time value updates
+- Reset to default values functionality
+- Responsive grid layout for mobile and desktop
+
+### Internal Components
+
+**InputField** - Reusable input field with prefix/suffix support
+
+```jsx
+<InputField 
+  label="Average Order Value" 
+  name="averageOrderValue" 
+  value={data.averageOrderValue} 
+  prefix="₹" 
+  onChange={handleChange} 
+/>
+```
+
+---
+
+## MetricsDisplay
+
+Displays calculated financial metrics with animated values and break-even indicator.
+
+**Location:** `src/components/MetricsDisplay.jsx`
+
+### Props
+
+<ParamField path="metrics" type="object" required>
+  Calculated metrics from `calculateMetrics()`
+  ```javascript
+  {
+    totalRevenue: number,
+    codOrders: number,
+    rtoOrders: number,
+    totalRtoLoss: number,
+    netRealizedRevenue: number,
+    netProfitAfterRto: number,
+    breakEvenRtoPercentage: number
+  }
+  ```
+</ParamField>
+
+<ParamField path="data" type="object" required>
+  Current business input data (used for RTO percentage comparison)
+</ParamField>
+
+### Usage Example
+
+```jsx
+import MetricsDisplay from './components/MetricsDisplay'
+import { calculateMetrics } from './utils/calculations'
+
+function App() {
+  const metrics = calculateMetrics(data, isAnnual)
+  
+  return <MetricsDisplay metrics={metrics} data={data} />
+}
+```
+
+### Features
+
+- Animated number counting with `react-countup`
+- Currency formatting with Indian Rupee symbol
+- Color-coded metric cards (danger for losses, primary for profits)
+- Break-even circular progress indicator
+- Risk assessment badge (exceeds threshold vs. safe range)
+- Icon integration from `lucide-react`
+
+### Metric Cards
+
+1. **Total Revenue** - Shows potential revenue (blue, IndianRupee icon)
+2. **COD Orders** - Number of COD orders (default, Package icon)
+3. **RTO Orders** - Number of returns (red, PackageX icon)
+4. **Total RTO Loss** - Financial loss (red, TrendingDown icon)
+5. **Realized Revenue** - Actual revenue received (default, CreditCard icon)
+6. **Net Profit** - Post-RTO profit (blue, TrendingUp icon)
+
+---
+
+## SimulationSection
+
+Interactive slider to simulate RTO reduction scenarios and visualize potential savings.
+
+**Location:** `src/components/SimulationSection.jsx`
+
+### Props
+
+<ParamField path="data" type="object" required>
+  Current business input data
+</ParamField>
+
+<ParamField path="isAnnual" type="boolean" required>
+  Whether displaying annual or monthly view
+</ParamField>
+
+### Usage Example
+
+```jsx
+import SimulationSection from './components/SimulationSection'
+
+function App() {
+  const [isAnnual, setIsAnnual] = useState(false)
+  
+  return <SimulationSection data={data} isAnnual={isAnnual} />
+}
+```
+
+### Features
+
+- Interactive range slider (0-50% RTO reduction)
+- Real-time savings calculation
+- Target RTO percentage display
+- Savings card with profit improvement and orders saved
+- Quick projection grid showing 5%, 10%, 15% reduction impacts
+- Currency formatting with INR locale
+
+### Internal State
+
+```javascript
+const [sliderValue, setSliderValue] = useState(10)
+```
+
+Manages the current slider position for RTO reduction percentage.
+
+---
+
+## VisualAnalytics
+
+Data visualization with interactive charts showing financial composition and optimization impact.
+
+**Location:** `src/components/VisualAnalytics.jsx`
+
+### Props
+
+<ParamField path="metrics" type="object" required>
+  Calculated metrics from current data
+</ParamField>
+
+<ParamField path="data" type="object" required>
+  Current business input data
+</ParamField>
+
+<ParamField path="isAnnual" type="boolean" required>
+  View mode for calculations
+</ParamField>
+
+### Usage Example
+
+```jsx
+import VisualAnalytics from './components/VisualAnalytics'
+
+function App() {
+  return <VisualAnalytics metrics={metrics} data={data} isAnnual={isAnnual} />
+}
+```
+
+### Features
+
+- Two responsive bar charts using `recharts` library
+- **Chart 1: Financial Composition**
+  - Total Revenue (blue)
+  - RTO Loss (red)
+  - Net Profit (green)
+- **Chart 2: Impact of 10% RTO Reduction**
+  - Current vs. Projected RTO Loss
+  - Current vs. Projected Net Profit
+- Custom tooltips with formatted currency
+- Responsive design with `ResponsiveContainer`
+- Smart currency formatting (Cr for crores, L for lakhs)
+
+### Chart Configuration
+
+```javascript
+<BarChart data={financialData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+  <XAxis dataKey="name" />
+  <YAxis tickFormatter={formatCurrency} />
+  <Tooltip content={<CustomTooltip />} />
+  <Bar dataKey="value" radius={[4, 4, 0, 0]} />
+</BarChart>
+```
+
+---
+
+## AIInsights
+
+Generates dynamic business insights and recommendations based on current metrics.
+
+**Location:** `src/components/AIInsights.jsx`
+
+### Props
+
+<ParamField path="data" type="object" required>
+  Current business input data
+</ParamField>
+
+<ParamField path="metrics" type="object" required>
+  Calculated financial metrics
+</ParamField>
+
+<ParamField path="isAnnual" type="boolean" required>
+  View mode for messaging context
+</ParamField>
+
+### Usage Example
+
+```jsx
+import AIInsights from './components/AIInsights'
+
+function App() {
+  return <AIInsights data={data} metrics={metrics} isAnnual={isAnnual} />
+}
+```
+
+### Features
+
+- Dynamic insight generation based on business conditions
+- Color-coded insight cards (warning, success, opportunity)
+- Icon-based visual categorization
+- Contextual recommendations
+
+### Insight Logic
+
+**1. High RTO Warning** (if RTO > 25%)
+```javascript
+{
+  type: 'warning',
+  icon: <AlertTriangle />,
+  title: 'Critical RTO Alert',
+  message: 'Your RTO rate is dangerously high...'
+}
+```
+
+**2. Healthy RTO Confirmation** (if RTO ≤ 15%)
+```javascript
+{
+  type: 'success',
+  icon: <CheckCircle />,
+  title: 'Healthy RTO Rate',
+  message: 'Your RTO is within industry benchmark...'
+}
+```
+
+**3. Unprofitable Operation Alert** (if RTO > break-even)
+```javascript
+{
+  type: 'warning',
+  icon: <ShieldAlert />,
+  title: 'Unprofitable Operation Alert',
+  message: 'Your RTO exceeds break-even threshold...'
+}
+```
+
+**4. Partial COD Strategy** (if COD > 40% and RTO > 15%)
+```javascript
+{
+  type: 'suggestion',
+  icon: <ShieldAlert />,
+  title: 'Implement Partial COD',
+  message: 'Consider charging non-refundable advance...'
+}
+```
+
+**5. Prepaid Incentive Opportunity** (if COD > 20%)
+```javascript
+{
+  type: 'opportunity',
+  icon: <TrendingUp />,
+  title: 'Prepaid Incentive Opportunity',
+  message: 'Convert 10% COD to prepaid with 5% discount...'
+}
+```
+
+---
+
+## PrepaidComparison
+
+Compares current scenario with 100% prepaid scenario to show maximum profit potential.
+
+**Location:** `src/components/PrepaidComparison.jsx`
+
+### Props
+
+<ParamField path="data" type="object" required>
+  Current business input data
+</ParamField>
+
+<ParamField path="isAnnual" type="boolean" required>
+  View mode for calculations
+</ParamField>
+
+### Usage Example
+
+```jsx
+import PrepaidComparison from './components/PrepaidComparison'
+
+function App() {
+  return <PrepaidComparison data={data} isAnnual={isAnnual} />
+}
+```
+
+### Features
+
+- Side-by-side scenario comparison
+- Mobile-responsive toggle view
+- Animated value counting
+- Profit difference highlight banner
+- Color-coded metrics (green for prepaid benefits)
+
+### Internal State
+
+```javascript
+const [view, setView] = useState('current') // 'current' | 'prepaid'
+```
+
+Manages which scenario is displayed on mobile devices.
+
+### Comparison Logic
+
+```javascript
+const currentMetrics = calculateMetrics(data, isAnnual)
+const prepaidData = { ...data, codPercentage: 0, rtoPercentage: 0 }
+const prepaidMetrics = calculateMetrics(prepaidData, isAnnual)
+const profitDifference = prepaidMetrics.netProfitAfterRto - currentMetrics.netProfitAfterRto
+```
+
+---
+
+## RiskMeter
+
+Visual gauge showing RTO risk level with actionable advice.
+
+**Location:** `src/components/RiskMeter.jsx`
+
+### Props
+
+<ParamField path="rtoPercentage" type="number" required>
+  Current RTO percentage (0-100)
+</ParamField>
+
+### Usage Example
+
+```jsx
+import RiskMeter from './components/RiskMeter'
+
+function App() {
+  return <RiskMeter rtoPercentage={data.rtoPercentage} />
+}
+```
+
+### Features
+
+- Semi-circular SVG gauge with animated fill
+- Color-coded risk levels (green, yellow, orange, red)
+- Animated percentage counting
+- Risk-specific advice messages
+- Visual scale markers (0%, 25%, 50%+)
+
+### Risk Levels
+
+**Healthy (0-10%)**
+```javascript
+{
+  label: 'Healthy RTO Level',
+  color: '#10b981',
+  advice: 'Continue current fulfillment strategies...'
+}
+```
+
+**Moderate (11-20%)**
+```javascript
+{
+  label: 'Moderate Risk',
+  color: '#f59e0b',
+  advice: 'Consider implementing address verification...'
+}
+```
+
+**High (21-30%)**
+```javascript
+{
+  label: 'High Risk – Action Needed',
+  color: '#f97316',
+  advice: 'Implement robust NDR management...'
+}
+```
+
+**Critical (31%+)**
+```javascript
+{
+  label: 'Critical – Profit Threat',
+  color: '#ef4444',
+  advice: 'Halt COD for chronic returners...'
+}
+```
+
+### Gauge Mathematics
+
+```javascript
+const radius = 40
+const circumference = Math.PI * radius // 125.66
+const fillLength = (Math.min(rtoPercentage, 50) / 50) * circumference
+```
+
+The gauge maps 0-50% RTO across the semi-circle arc. Values above 50% peg at maximum.
+
+---
+
+## Component Dependencies
+
+All components share these common dependencies:
+
+```json
+{
+  "react": "^18.x",
+  "react-countup": "^6.x",
+  "lucide-react": "^0.x",
+  "recharts": "^2.x"
+}
+```
+
+### Icon Usage (lucide-react)
+
+```javascript
+import { 
+  BarChart3, LineChart, Moon, Sun, Download,
+  IndianRupee, TrendingUp, TrendingDown,
+  Package, PackageX, CreditCard,
+  Lightbulb, AlertTriangle, CheckCircle,
+  ShieldAlert, Sparkles, RefreshCcw
+} from 'lucide-react'
+```
+
+---
+
+## Component Hierarchy
+
+```
+App.jsx
+├── InputSection
+│   └── InputField (internal)
+├── RiskMeter
+├── MetricsDisplay
+│   └── AnimatedValue (internal)
+├── AIInsights
+├── SimulationSection
+├── PrepaidComparison
+│   └── AnimatedValue (internal)
+└── VisualAnalytics
+    └── CustomTooltip (internal)
+```
+
+## Usage in App.jsx
+
+```jsx
+import InputSection from './components/InputSection'
+import MetricsDisplay from './components/MetricsDisplay'
+import SimulationSection from './components/SimulationSection'
+import VisualAnalytics from './components/VisualAnalytics'
+import AIInsights from './components/AIInsights'
+import PrepaidComparison from './components/PrepaidComparison'
+import RiskMeter from './components/RiskMeter'
+import { calculateMetrics } from './utils/calculations'
+
+function App() {
+  const [data, setData] = useState(defaultData)
+  const [isAnnual, setIsAnnual] = useState(false)
+  const metrics = calculateMetrics(data, isAnnual)
+
+  return (
+    <>
+      <InputSection data={data} onChange={handleDataChange} onReset={handleReset} />
+      <RiskMeter rtoPercentage={data.rtoPercentage} />
+      <MetricsDisplay metrics={metrics} data={data} />
+      <AIInsights data={data} metrics={metrics} isAnnual={isAnnual} />
+      <SimulationSection data={data} isAnnual={isAnnual} />
+      <PrepaidComparison data={data} isAnnual={isAnnual} />
+      <VisualAnalytics metrics={metrics} data={data} isAnnual={isAnnual} />
+    </>
+  )
+}
+```

@@ -1,80 +1,227 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart guide
+description: Get started with RTO Profit Simulator in minutes and calculate your first RTO impact analysis
 ---
 
-## Get started in three steps
+## Get started in 5 minutes
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through running RTO Profit Simulator locally and performing your first profitability analysis.
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Clone and install">
+    First, clone the repository and install dependencies:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    <CodeGroup>
+    ```bash npm
+    git clone <repository-url>
+    cd rto-profit-simulator/source
+    npm install
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    ```bash yarn
+    git clone <repository-url>
+    cd rto-profit-simulator/source
+    yarn install
+    ```
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash pnpm
+    git clone <repository-url>
+    cd rto-profit-simulator/source
+    pnpm install
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Start the development server">
+    Launch the application in development mode:
+    
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+    
+    ```bash yarn
+    yarn dev
+    ```
+    
+    ```bash pnpm
+    pnpm dev
+    ```
+    </CodeGroup>
+    
+    The application will open at `http://localhost:5173` (Vite's default port).
+  </Step>
+  
+  <Step title="Review default metrics">
+    Upon opening the app, you'll see the dashboard with default values:
+    
+    - **Monthly orders**: 10,000
+    - **Average order value**: ₹1,500
+    - **COD percentage**: 60%
+    - **RTO percentage**: 30%
+    - **Forward shipping cost**: ₹60 per order
+    - **Return shipping cost**: ₹60 per RTO
+    - **Product cost**: ₹500 per order
+    
+    These defaults represent a typical Indian e-commerce business with a high RTO problem.
+  </Step>
+  
+  <Step title="Input your business metrics">
+    In the **Business Inputs** card on the left sidebar, enter your actual business data:
+    
+    1. **Monthly Orders** - Your average monthly order volume
+    2. **Average Order Value** - Mean transaction value in ₹
+    3. **COD Percentage** - What % of orders are Cash on Delivery?
+    4. **RTO Percentage** - What % of COD orders get returned?
+    5. **Shipping Costs** - Your forward and return shipping costs per order
+    6. **Product Cost** - Average cost of goods per order
+    
+    <Note>
+      All metrics update in real-time as you type. The calculator automatically recalculates financial impact, break-even RTO percentage, and AI insights.
+    </Note>
+  </Step>
+  
+  <Step title="Analyze your results">
+    The **Financial Impact Overview** section displays six key metrics:
+    
+    - **Total Revenue** - Gross revenue from all orders
+    - **COD Orders** - Number of COD orders placed
+    - **RTO Orders** - Failed deliveries (shown in red)
+    - **Total RTO Loss** - Complete financial loss from RTOs
+    - **Realized Revenue** - Actual revenue after accounting for RTOs
+    - **Net Profit (Post-RTO)** - Your bottom line after RTO losses
+    
+    Pay special attention to the **Break-even RTO %** indicator below these metrics. This shows the maximum sustainable RTO rate before your business becomes unprofitable.
+    
+    <Warning>
+      If your current RTO percentage exceeds the break-even threshold, you're losing money on every order processed. This requires immediate attention.
+    </Warning>
+  </Step>
+  
+  <Step title="Review AI-powered insights">
+    Scroll to the **AI-Powered Business Insights** section to see intelligent recommendations:
+    
+    - **Critical RTO Alert** - Warns if RTO exceeds 25%
+    - **Unprofitable Operation Alert** - Triggers when RTO exceeds break-even
+    - **Partial COD Strategy** - Suggests advance payment for high-risk orders
+    - **Prepaid Incentive Opportunity** - Calculates profit improvement from COD-to-prepaid conversion
+    
+    These insights adapt dynamically based on your inputs.
+  </Step>
+  
+  <Step title="Simulate optimization scenarios">
+    The **What-If Scenarios: RTO Reduction Impact** section lets you model improvements:
+    
+    - See potential savings from reducing RTO by 5%, 10%, or 15%
+    - Each scenario shows saved orders and profit improvement
+    - Use these projections to justify investments in fraud prevention, NDR management, or address verification
+    
+    Example: If reducing RTO from 30% to 20% saves ₹3.72L monthly, you can justify spending up to that amount on prevention tools.
+  </Step>
+  
+  <Step title="Explore visual analytics">
+    Scroll to the charts section to see:
+    
+    - **Financial Composition** - Bar chart comparing Total Revenue, RTO Loss, and Net Profit
+    - **Impact of 10% RTO Reduction** - Side-by-side comparison of current vs optimized performance
+    
+    These charts are interactive - hover over bars to see exact values.
+  </Step>
+  
+  <Step title="Toggle annual projections">
+    Use the **Monthly View** / **Annual Projection** toggle in the header to see yearly impact:
+    
+    - All metrics multiply by 12 for annual view
+    - Helps stakeholders understand long-term financial impact
+    - Annual loss banner appears at the top showing total yearly RTO cost
+    
+    Example: A monthly RTO loss of ₹11.16L becomes **₹1.34 crore annually** - much more impactful for C-level presentations.
+  </Step>
+  
+  <Step title="Export your report">
+    Click the **Export Report** button in the top-right corner to generate a PDF containing:
+    
+    - Business inputs summary table
+    - Financial impact overview with all KPIs
+    - Optimization projections for 5%, 10%, and 15% RTO reductions
+    
+    The PDF is professionally formatted and ready to share with stakeholders.
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Example: Calculate your RTO impact
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Let's walk through a realistic example:
 
-### Step 3: Go live
+### Scenario: Fashion e-commerce brand
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+**Business profile:**
+- Selling apparel and accessories in Tier 2/3 cities in India
+- Strong COD preference among customers
+- Struggling with fake orders and delivery rejections
 
-## Next steps
+**Input metrics:**
 
-Now that you have your docs running, explore these key features:
+```javascript
+monthlyOrders: 8000
+averageOrderValue: 1200
+codPercentage: 70  // High COD due to Tier 2/3 focus
+rtoPercentage: 35  // Poor address verification
+forwardShippingCost: 50
+returnShippingCost: 50
+productCost: 400
+```
 
-<CardGroup cols={2}>
+### Results
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+**Financial Impact:**
+- Total Revenue: ₹96,00,000
+- COD Orders: 5,600
+- RTO Orders: 1,960 (35% of COD)
+- **Total RTO Loss: ₹9,80,000** monthly
+- Net Profit (Post-RTO): **₹13,20,000** monthly
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+**Break-even RTO:** 63.3%
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+### AI Insights triggered:
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+1. **Critical RTO Alert** - 35% RTO is dangerously high
+2. **Partial COD Strategy** - Recommend ₹100-200 advance for unverified addresses
+3. **Prepaid Incentive Opportunity** - Converting 10% COD to prepaid saves ₹2.38L monthly
 
-</CardGroup>
+### Optimization scenarios:
+
+- **Reduce RTO to 30%** (-5%): Save ₹2.50L monthly
+- **Reduce RTO to 25%** (-10%): Save ₹5.00L monthly
+- **Reduce RTO to 20%** (-15%): Save ₹7.50L monthly
+
+### Actionable next steps:
+
+1. Implement OTP verification for all COD orders (cost: ₹1-2 per order)
+2. Block high-risk pin codes or mandate partial payment
+3. Offer 5% discount on prepaid orders to shift payment mix
+4. Partner with logistics provider for better NDR management
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Even implementing basic OTP verification and blocking the top 10% riskiest pin codes could reduce RTO by 5-10 percentage points, saving ₹2.5-5L monthly with minimal investment.
 </Note>
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Installation guide" icon="download" href="/installation">
+    Set up a development environment and customize the simulator
+  </Card>
+  
+  <Card title="Understanding calculations" icon="calculator" href="/reference/calculations">
+    Learn how metrics are calculated and break-even analysis works
+  </Card>
+  
+  <Card title="Features overview" icon="grid" href="/features/overview">
+    Explore all features including simulation, charts, and PDF export
+  </Card>
+  
+  <Card title="Customization guide" icon="palette" href="/reference/configuration">
+    Modify default values, add new metrics, or change branding
+  </Card>
+</CardGroup>

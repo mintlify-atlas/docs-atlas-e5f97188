@@ -1,0 +1,168 @@
+---
+title: Metrics Display
+description: Real-time KPI dashboard showing revenue, losses, profitability, and break-even RTO percentage
+---
+
+The Metrics Display provides a comprehensive financial overview of your business performance, highlighting the impact of RTO on your bottom line with animated, color-coded cards.
+
+## Component Location
+
+Implemented in: `src/components/MetricsDisplay.jsx:26-131`
+
+## Key Performance Indicators
+
+### Total Revenue
+- **Icon**: Indian Rupee
+- **Calculation**: `monthlyOrders × averageOrderValue`
+- **Display**: Currency with animated counter
+- **Purpose**: Shows gross revenue potential before accounting for RTO losses
+- **Code Reference**: `calculations.js:12`
+
+<Info>
+  Total Revenue represents the maximum possible revenue if all orders were successfully delivered.
+</Info>
+
+### COD Orders
+- **Icon**: Package
+- **Calculation**: `Math.round(monthlyOrders × (codPercentage / 100))`
+- **Display**: Whole number count
+- **Purpose**: Shows order volume at risk of RTO (only COD orders can result in returns)
+- **Code Reference**: `calculations.js:14`
+
+### RTO Orders
+- **Icon**: PackageX
+- **Card Style**: Danger (red accent)
+- **Calculation**: `Math.round(codOrders × (rtoPercentage / 100))`
+- **Display**: Whole number count
+- **Purpose**: Actual number of orders that resulted in Return to Origin
+- **Code Reference**: `calculations.js:18`
+
+### Total RTO Loss
+- **Icon**: TrendingDown
+- **Card Style**: Danger (red accent)
+- **Calculation**: `rtoOrders × (forwardShippingCost + returnShippingCost + productCost)`
+- **Display**: Currency (negative impact)
+- **Purpose**: Total financial impact of RTO including all costs
+- **Code Reference**: `calculations.js:23-24`
+
+<Warning>
+  Total RTO Loss includes forward shipping, return shipping, AND product cost. This represents complete capital loss per RTO order.
+</Warning>
+
+### Realized Revenue
+- **Icon**: CreditCard
+- **Calculation**: `(prepaidOrders + deliveredCodOrders) × averageOrderValue`
+- **Where**: `deliveredCodOrders = codOrders - rtoOrders`
+- **Display**: Currency
+- **Purpose**: Actual revenue from successfully delivered orders
+- **Code Reference**: `calculations.js:27`
+
+### Net Profit (Post-RTO)
+- **Icon**: TrendingUp
+- **Card Style**: Primary (blue accent)
+- **Calculation**: `netRealizedRevenue - totalRtoLoss`
+- **Display**: Currency
+- **Purpose**: Final profitability after accounting for all RTO losses
+- **Code Reference**: `calculations.js:35`
+
+<Tip>
+  Net Profit Post-RTO is the most critical metric—it shows your actual bottom line after RTO impact.
+</Tip>
+
+## Break-Even RTO Indicator
+
+### What is Break-Even RTO?
+
+The break-even RTO percentage represents the maximum acceptable RTO rate before your net profit becomes negative. This is a critical threshold for business sustainability.
+
+### Calculation Formula
+
+```javascript
+const profitPerSuccessfulOrder = averageOrderValue - productCost - forwardShippingCost;
+const lossPerRtoOrder = productCost + forwardShippingCost + returnShippingCost;
+
+breakEvenRtoPercentage = 
+  (profitPerSuccessfulOrder / (profitPerSuccessfulOrder + lossPerRtoOrder)) × 100;
+```
+
+**Code Reference**: `calculations.js:38-44`
+
+### Visual Display
+
+The break-even indicator (`MetricsDisplay.jsx:95-125`) shows:
+
+- **Circular gauge** with percentage display
+- **Color-coded status**:
+  - Green: Current RTO is below break-even (safe)
+  - Red: Current RTO exceeds break-even (critical)
+- **Status badge**:
+  - "Within safe profitability range" (green)
+  - "Current RTO exceeds sustainable threshold" (red)
+
+### Example Calculation
+
+With default values:
+- Profit per successful order: ₹1,500 - ₹500 - ₹60 = ₹940
+- Loss per RTO order: ₹500 + ₹60 + ₹60 = ₹620
+- Break-even RTO: (940 / (940 + 620)) × 100 = **60.3%**
+
+Since the default RTO rate is 30%, the business is within the safe range.
+
+<Note>
+  The break-even percentage is independent of order volume—it's purely based on unit economics.
+</Note>
+
+## Animated Values
+
+All numeric values use the `react-countup` library (`MetricsDisplay.jsx:12-24`) to animate from 0 to the calculated value over 1.5 seconds:
+
+```jsx
+<CountUp
+  end={value}
+  duration={1.5}
+  separator=","
+  decimals={0}
+/>
+```
+
+This provides visual feedback when inputs change and makes the interface more engaging.
+
+## Monthly vs. Annual View
+
+All metrics automatically adjust based on the view toggle:
+
+- **Monthly View**: Shows metrics as-is
+- **Annual View**: Multiplies all values by 12 (`calculations.js:46-56`)
+
+```javascript
+const m = isAnnual ? 12 : 1;
+
+return {
+  totalRevenue: totalRevenue * m,
+  codOrders: codOrders * m,
+  rtoOrders: rtoOrders * m,
+  totalRtoLoss: totalRtoLoss * m,
+  // ... etc
+};
+```
+
+## Responsive Grid Layout
+
+Metrics are displayed in a responsive grid (`MetricsDisplay.jsx:32`):
+
+```jsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+```
+
+- **Mobile**: Single column (stacked)
+- **Tablet**: 2 columns
+- **Desktop**: 3 columns
+
+## Color Coding System
+
+- **Default**: White/neutral background (informational metrics)
+- **Danger**: Red accent (negative impact: RTO Orders, RTO Loss)
+- **Primary**: Blue accent (positive outcome: Net Profit)
+- **Success**: Green (used in other components when comparing improvements)
+
+This visual hierarchy helps users quickly identify problem areas and positive outcomes.

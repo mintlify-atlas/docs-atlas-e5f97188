@@ -1,0 +1,251 @@
+---
+title: Visual Analytics
+description: Interactive charts showing financial composition and RTO reduction impact
+---
+
+The Visual Analytics section transforms your RTO data into interactive charts that make it easy to understand financial composition and the impact of optimization strategies.
+
+## Component Location
+
+Implemented in: `src/components/VisualAnalytics.jsx:41-122`
+
+## Chart Library
+
+All charts are built using **Recharts**, a composable charting library built on React components:
+
+```jsx
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  Legend
+} from 'recharts';
+```
+
+## Chart 1: Financial Composition
+
+### Purpose
+
+Shows the relationship between total revenue, RTO loss, and net profit in a single view, making it easy to visualize how RTO impacts your bottom line.
+
+### Data Structure
+
+```javascript
+const financialData = [
+  { name: 'Total Revenue', value: metrics.totalRevenue, color: '#2563eb' },
+  { name: 'RTO Loss', value: metrics.totalRtoLoss, color: '#ef4444' },
+  { name: 'Net Profit', value: metrics.netProfitAfterRto, color: '#10b981' }
+];
+```
+
+**Code Reference**: `VisualAnalytics.jsx:43-47`
+
+### Visual Design
+
+- **Chart Type**: Vertical bar chart
+- **Colors**:
+  - Total Revenue: Blue (`#2563eb`)
+  - RTO Loss: Red (`#ef4444`)
+  - Net Profit: Green (`#10b981`)
+- **Dimensions**: 350px height, 100% width (responsive)
+- **Bar Styling**: Rounded top corners (`radius={[4, 4, 0, 0]}`)
+
+<Info>
+  Color coding helps users quickly identify positive (revenue, profit) and negative (loss) components.
+</Info>
+
+### Chart Features
+
+- **Responsive Container**: Automatically adjusts to parent width
+- **Formatted Y-Axis**: Currency values displayed in Crores (Cr) and Lakhs (L) for large numbers
+- **Interactive Tooltip**: Hover over bars to see exact values
+- **No Vertical Grid Lines**: Cleaner appearance with only horizontal gridlines
+
+## Chart 2: Impact of 10% RTO Reduction
+
+### Purpose
+
+Compares current performance against a projected scenario where RTO is reduced by 10%, showing the direct impact on both RTO loss and net profit.
+
+### Data Calculation
+
+```javascript
+const reducedData = {
+  ...data,
+  rtoPercentage: Math.max(0, data.rtoPercentage - 10)
+};
+const projectedMetrics = calculateMetrics(reducedData);
+
+const comparisonData = [
+  {
+    name: 'RTO Loss',
+    Current: metrics.totalRtoLoss,
+    Projected: projectedMetrics.totalRtoLoss,
+  },
+  {
+    name: 'Realized Net Profit',
+    Current: metrics.netProfitAfterRto,
+    Projected: projectedMetrics.netProfitAfterRto,
+  }
+];
+```
+
+**Code Reference**: `VisualAnalytics.jsx:50-67`
+
+### Visual Design
+
+- **Chart Type**: Grouped vertical bar chart
+- **Colors**:
+  - Current Performance: Gray (`#94a3b8`)
+  - Optimized Performance: Blue (`#2563eb`)
+- **Legend**: Displays "Current Performance" vs "Optimized (-10% RTO)"
+- **Comparison**: Side-by-side bars make improvement immediately visible
+
+<Tip>
+  The 10% reduction is a fixed benchmark that provides a realistic improvement target for most e-commerce businesses.
+</Tip>
+
+## Currency Formatting for Charts
+
+### Compact Format Function
+
+```javascript
+const formatCurrency = (value) => {
+  if (value >= 10000000) {
+    return `₹${(value / 10000000).toFixed(2)}Cr`;
+  }
+  if (value >= 100000) {
+    return `₹${(value / 100000).toFixed(2)}L`;
+  }
+  return `₹${new Intl.NumberFormat('en-IN').format(value)}`;
+};
+```
+
+**Code Reference**: `VisualAnalytics.jsx:15-23`
+
+**Examples**:
+- 15,000,000 → ₹1.50Cr
+- 500,000 → ₹5.00L
+- 50,000 → ₹50,000
+
+This keeps Y-axis labels readable even for large values.
+
+## Custom Tooltip
+
+Both charts use a custom tooltip component that displays formatted values on hover:
+
+```jsx
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="card" style={{ 
+        padding: '1rem', 
+        border: '1px solid var(--border-color)' 
+      }}>
+        <p style={{ fontWeight: 600 }}>{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.fill }}>
+            {entry.name}: ₹{new Intl.NumberFormat('en-IN').format(entry.value)}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+```
+
+**Code Reference**: `VisualAnalytics.jsx:25-39`
+
+### Tooltip Features
+
+- Styled card with border matching the app theme
+- Color-coded values matching bar colors
+- Full currency formatting (not abbreviated)
+- Only appears when actively hovering
+
+<Note>
+  Tooltips show exact values while the Y-axis uses abbreviated formatting—this provides both readability and precision.
+</Note>
+
+## Responsive Layout
+
+The two charts are arranged in a responsive grid:
+
+```jsx
+<div className="grid grid-cols-1 lg:grid-cols-2">
+  {/* Chart 1 */}
+  {/* Chart 2 */}
+</div>
+```
+
+- **Mobile/Tablet**: Single column (stacked vertically)
+- **Desktop**: Two columns (side-by-side)
+
+## Chart Styling
+
+### Consistent Design Elements
+
+- **Grid**: Dashed horizontal lines only (`strokeDasharray="3 3" vertical={false}`)
+- **Axes**: No axis lines or tick marks for cleaner appearance
+- **Text Color**: Uses CSS variable `var(--text-secondary)` for theme consistency
+- **Margins**: `{ top: 20, right: 30, left: 20, bottom: 20 }`
+- **Bar Radius**: Rounded top corners (`radius={[4, 4, 0, 0]}`)
+
+### Dark Mode Support
+
+Charts automatically adapt to dark mode through CSS variables:
+- `var(--border-color)` for grid lines
+- `var(--text-secondary)` for axis labels
+- `var(--surface-white)` for tooltip background
+
+All colors adjust when the dark mode toggle is activated.
+
+## Real-World Insights
+
+### Financial Composition Chart
+
+Example interpretation:
+- **Total Revenue**: ₹1.50Cr (potential if all orders delivered)
+- **RTO Loss**: ₹11.16L (money lost to returns)
+- **Net Profit**: ₹1.39Cr (actual profit after RTO impact)
+
+The visual comparison shows RTO loss is eating up ~7.4% of total revenue.
+
+### Impact of 10% Reduction Chart
+
+Example interpretation:
+- **RTO Loss**: Current ₹11.16L → Projected ₹7.44L (33% reduction)
+- **Net Profit**: Current ₹1.39Cr → Projected ₹1.51Cr (9% improvement)
+
+The grouped bars make it immediately clear how much profit improvement is possible with realistic RTO reduction.
+
+## Integration with Other Features
+
+Visual Analytics complements:
+
+- **Metrics Display**: Provides visual representation of the numeric KPIs
+- **RTO Simulator**: The comparison chart shows the same concept as the interactive slider but for a fixed 10% benchmark
+- **PDF Export**: Charts are not included in PDF export (limitation of jsPDF), but the underlying data is shown in tables
+
+<Warning>
+  Charts are not included in PDF exports due to technical limitations. The PDF report includes the same data in tabular format instead.
+</Warning>
+
+## Performance Considerations
+
+- **ResponsiveContainer**: Efficiently handles window resizing without manual width calculations
+- **Animation**: Recharts includes built-in animations when data changes
+- **Memoization**: Consider wrapping in `React.memo()` if experiencing performance issues with frequent input changes
+
+## Use Cases
+
+1. **Executive Presentations**: Visual charts are more persuasive than raw numbers when presenting to leadership
+2. **Benchmarking**: Quickly compare current vs. optimized scenarios
+3. **Financial Planning**: Visualize the relationship between revenue, losses, and profitability
+4. **Investor Reporting**: Professional charts demonstrate the impact of operational improvements

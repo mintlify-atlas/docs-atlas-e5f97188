@@ -1,0 +1,393 @@
+---
+title: Installation
+description: Set up RTO Profit Simulator for local development, customization, or production deployment
+---
+
+## Prerequisites
+
+Before installing RTO Profit Simulator, ensure you have the following:
+
+- **Node.js** version 18.0 or higher
+- **npm**, **yarn**, or **pnpm** package manager
+- A modern code editor (VS Code recommended)
+- Git for version control
+
+<Note>
+  This project uses React 19 and Vite 7, which require Node.js 18+. Check your version with `node --version`.
+</Note>
+
+## Installation steps
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the project to your local machine:
+    
+    ```bash
+    git clone <repository-url>
+    cd rto-profit-simulator/source
+    ```
+    
+    The main application code lives in the `source` directory.
+  </Step>
+  
+  <Step title="Install dependencies">
+    Install all required packages:
+    
+    <CodeGroup>
+    ```bash npm
+    npm install
+    ```
+    
+    ```bash yarn
+    yarn install
+    ```
+    
+    ```bash pnpm
+    pnpm install
+    ```
+    </CodeGroup>
+    
+    This installs the following key dependencies:
+    
+    **Core:**
+    - `react` (19.2.0) - React framework
+    - `react-dom` (19.2.0) - React DOM renderer
+    - `vite` (7.3.1) - Build tool and dev server
+    
+    **UI & Visualization:**
+    - `recharts` (3.7.0) - Charting library for analytics
+    - `lucide-react` (0.575.0) - Icon library
+    - `react-countup` (6.5.3) - Animated number transitions
+    
+    **PDF Export:**
+    - `jspdf` (4.2.0) - PDF generation
+    - `jspdf-autotable` (5.0.7) - Table formatting for PDFs
+    - `html2canvas` (1.4.1) - HTML to canvas rendering
+    
+    **Development:**
+    - `eslint` (9.39.1) - Code linting
+    - `@vitejs/plugin-react` (5.1.1) - Vite React plugin
+  </Step>
+  
+  <Step title="Start the development server">
+    Launch the app in development mode with hot module replacement:
+    
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+    
+    ```bash yarn
+    yarn dev
+    ```
+    
+    ```bash pnpm
+    pnpm dev
+    ```
+    </CodeGroup>
+    
+    The development server will start at `http://localhost:5173`. Vite automatically opens your browser.
+    
+    <Note>
+      Vite's dev server includes hot module replacement (HMR), so changes to your code instantly reflect in the browser without full page reloads.
+    </Note>
+  </Step>
+  
+  <Step title="Verify the installation">
+    Open your browser and navigate to `http://localhost:5173`. You should see:
+    
+    - The RTO Profit Simulator dashboard
+    - Business Inputs card on the left with default values
+    - Financial Impact Overview showing metrics
+    - Charts displaying financial composition
+    
+    Try changing a value in the Business Inputs section - metrics should update instantly.
+  </Step>
+</Steps>
+
+## Project structure
+
+Understanding the codebase structure:
+
+```
+source/
+├── index.html              # HTML entry point
+├── package.json            # Dependencies and scripts
+├── vite.config.js          # Vite configuration
+├── src/
+│   ├── main.jsx            # React entry point
+│   ├── App.jsx             # Main application component
+│   ├── index.css           # Global styles
+│   ├── components/
+│   │   ├── InputSection.jsx          # Business inputs form
+│   │   ├── MetricsDisplay.jsx        # KPI metrics cards
+│   │   ├── SimulationSection.jsx     # What-if scenarios
+│   │   ├── VisualAnalytics.jsx       # Recharts visualizations
+│   │   ├── AIInsights.jsx            # Intelligent recommendations
+│   │   ├── PrepaidComparison.jsx     # Prepaid vs COD analysis
+│   │   └── RiskMeter.jsx             # RTO risk gauge
+│   └── utils/
+│       └── calculations.js           # Core business logic
+└── public/
+    └── vite.svg            # Vite logo
+```
+
+### Key files to understand
+
+**App.jsx** (`src/App.jsx:1`)
+
+The main application component that:
+- Manages state for all business inputs
+- Handles localStorage persistence
+- Implements dark mode toggle
+- Orchestrates PDF export functionality
+- Renders all child components
+
+**calculations.js** (`src/utils/calculations.js:1`)
+
+Contains the core business logic:
+
+```javascript
+export const calculateMetrics = (data, isAnnual = false) => {
+  const {
+    monthlyOrders,
+    averageOrderValue,
+    codPercentage,
+    rtoPercentage,
+    forwardShippingCost,
+    returnShippingCost,
+    productCost,
+  } = data;
+
+  const totalRevenue = monthlyOrders * averageOrderValue;
+  const codOrders = Math.round(monthlyOrders * (codPercentage / 100));
+  const rtoOrders = Math.round(codOrders * (rtoPercentage / 100));
+  
+  const rtoLossPerOrder = forwardShippingCost + returnShippingCost + productCost;
+  const totalRtoLoss = rtoOrders * rtoLossPerOrder;
+  
+  // ... break-even calculation
+  
+  return { totalRevenue, codOrders, rtoOrders, totalRtoLoss, /* ... */ };
+};
+```
+
+This function powers all financial calculations throughout the app.
+
+**InputSection.jsx** (`src/components/InputSection.jsx:1`)
+
+Handles user input with validation:
+- Text inputs with prefix/suffix formatting (₹, %)
+- Real-time onChange handling
+- Reset to defaults functionality
+- localStorage persistence via parent component
+
+## Environment configuration
+
+RTO Profit Simulator runs entirely client-side with no backend or environment variables required.
+
+**Data persistence:**
+
+The app uses browser localStorage to persist:
+- Business input values (key: `rtoSimulatorData`)
+- Theme preference (key: `rtoSimulatorTheme`)
+
+Implementation in `src/App.jsx:26-54`:
+
+```javascript
+const [data, setData] = useState(() => {
+  const saved = localStorage.getItem('rtoSimulatorData');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse local storage data", e);
+    }
+  }
+  return defaultData;
+});
+
+useEffect(() => {
+  localStorage.setItem('rtoSimulatorData', JSON.stringify(data));
+}, [data]);
+```
+
+**Default values:**
+
+Customize default business metrics in `src/App.jsx:14-22`:
+
+```javascript
+const defaultData = {
+  monthlyOrders: 10000,
+  averageOrderValue: 1500,
+  codPercentage: 60,
+  rtoPercentage: 30,
+  forwardShippingCost: 60,
+  returnShippingCost: 60,
+  productCost: 500,
+};
+```
+
+<Note>
+  If you want to customize these defaults for your business or region, modify the values in the `defaultData` object. These will be the initial values when users first load the app.
+</Note>
+
+## Build for production
+
+<Steps>
+  <Step title="Create production build">
+    Build optimized static assets:
+    
+    <CodeGroup>
+    ```bash npm
+    npm run build
+    ```
+    
+    ```bash yarn
+    yarn build
+    ```
+    
+    ```bash pnpm
+    pnpm build
+    ```
+    </CodeGroup>
+    
+    This creates a `dist/` directory with:
+    - Minified JavaScript bundles
+    - Optimized CSS
+    - Compressed assets
+    - Production-ready `index.html`
+  </Step>
+  
+  <Step title="Preview production build locally">
+    Test the production build before deployment:
+    
+    <CodeGroup>
+    ```bash npm
+    npm run preview
+    ```
+    
+    ```bash yarn
+    yarn preview
+    ```
+    
+    ```bash pnpm
+    pnpm preview
+    ```
+    </CodeGroup>
+    
+    This serves the `dist/` directory at `http://localhost:4173`.
+  </Step>
+  
+  <Step title="Deploy to hosting">
+    The `dist/` folder contains static files that can be deployed to any hosting service:
+    
+    **Recommended platforms:**
+    - **Vercel** - Zero-config deployment for Vite apps
+    - **Netlify** - Drag-and-drop deployment
+    - **Cloudflare Pages** - Global CDN with free tier
+    - **GitHub Pages** - Free hosting for public repos
+    - **AWS S3 + CloudFront** - Enterprise-grade hosting
+    
+    Simply upload the contents of `dist/` to your hosting provider.
+  </Step>
+</Steps>
+
+### Production optimization
+
+The production build automatically includes:
+
+- **Code splitting** - Separate chunks for better caching
+- **Tree shaking** - Removes unused code
+- **Minification** - Reduces file sizes
+- **Asset optimization** - Compresses images and fonts
+
+Typical production build size:
+- JavaScript: ~250KB gzipped
+- CSS: ~15KB gzipped
+- Total initial load: ~265KB
+
+## Development commands
+
+Available npm scripts from `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",              // Start dev server
+    "build": "vite build",      // Production build
+    "lint": "eslint .",         // Run ESLint
+    "preview": "vite preview"   // Preview production build
+  }
+}
+```
+
+**Linting:**
+
+```bash
+npm run lint
+```
+
+Runs ESLint to check code quality and catch common issues. The project includes:
+- `eslint-plugin-react-hooks` - Enforces React Hooks rules
+- `eslint-plugin-react-refresh` - Ensures HMR compatibility
+
+## Troubleshooting
+
+### Port already in use
+
+If port 5173 is already taken:
+
+```bash
+# Vite will automatically try the next available port
+# Or specify a custom port:
+vite --port 3000
+```
+
+### Build errors with Node.js version
+
+Ensure Node.js 18+:
+
+```bash
+node --version  # Should be v18.0.0 or higher
+```
+
+Upgrade Node.js if needed using [nvm](https://github.com/nvm-sh/nvm) or download from [nodejs.org](https://nodejs.org/).
+
+### localStorage not persisting
+
+If your inputs don't save between sessions:
+- Check browser privacy settings (localStorage must be enabled)
+- Ensure you're not in incognito/private mode
+- Clear browser cache and try again
+
+### Charts not rendering
+
+If Recharts visualizations don't appear:
+- Check browser console for errors
+- Ensure `recharts` dependency installed correctly
+- Try clearing `node_modules` and reinstalling:
+  ```bash
+  rm -rf node_modules package-lock.json
+  npm install
+  ```
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Quickstart guide" icon="rocket" href="/quickstart">
+    Learn how to use the calculator and interpret results
+  </Card>
+  
+  <Card title="Customization" icon="palette" href="/reference/configuration">
+    Customize default values, branding, and add new features
+  </Card>
+  
+  <Card title="Understanding calculations" icon="calculator" href="/reference/calculations">
+    Deep dive into the business logic and formulas
+  </Card>
+  
+  <Card title="Deployment guide" icon="cloud" href="/installation">
+    Deploy to production on Vercel, Netlify, or other platforms
+  </Card>
+</CardGroup>

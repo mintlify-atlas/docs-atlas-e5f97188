@@ -1,0 +1,540 @@
+---
+title: 'Configuration Reference'
+description: 'Complete configuration guide for the RTO Profit Simulator including defaults, persistence, and customization'
+---
+
+## Overview
+
+The RTO Profit Simulator uses a combination of default values, localStorage persistence, and environment-aware configuration. This page documents all configurable aspects of the application.
+
+---
+
+## Default Business Values
+
+The application initializes with realistic default values defined in `src/App.jsx`:
+
+```javascript
+const defaultData = {
+  monthlyOrders: 10000,
+  averageOrderValue: 1500,
+  codPercentage: 60,
+  rtoPercentage: 30,
+  forwardShippingCost: 60,
+  returnShippingCost: 60,
+  productCost: 500,
+}
+```
+
+### Default Values Explained
+
+<ParamField path="monthlyOrders" type="number" default="10000">
+  Total number of orders processed per month
+  
+  **Typical range:** 1,000 - 100,000 depending on business size
+</ParamField>
+
+<ParamField path="averageOrderValue" type="number" default="1500">
+  Average value per order in Indian Rupees (₹)
+  
+  **Typical range:** ₹500 - ₹5,000 for e-commerce businesses
+</ParamField>
+
+<ParamField path="codPercentage" type="number" default="60">
+  Percentage of orders that are Cash on Delivery (0-100)
+  
+  **Industry benchmark:** 40-70% for Indian e-commerce
+</ParamField>
+
+<ParamField path="rtoPercentage" type="number" default="30">
+  Percentage of COD orders that result in Return to Origin (0-100)
+  
+  **Industry benchmark:**
+  - Healthy: < 15%
+  - Moderate: 15-25%
+  - High: 25-35%
+  - Critical: > 35%
+</ParamField>
+
+<ParamField path="forwardShippingCost" type="number" default="60">
+  Cost of shipping an order to the customer (₹)
+  
+  **Typical range:** ₹40 - ₹150 depending on weight and distance
+</ParamField>
+
+<ParamField path="returnShippingCost" type="number" default="60">
+  Cost of shipping an RTO order back to warehouse (₹)
+  
+  **Usually equal to:** Forward shipping cost
+</ParamField>
+
+<ParamField path="productCost" type="number" default="500">
+  Cost of goods sold per order (₹)
+  
+  **Typical range:** 30-60% of average order value
+</ParamField>
+
+---
+
+## LocalStorage Persistence
+
+The application automatically saves user inputs and preferences to browser localStorage.
+
+### Data Persistence
+
+**Storage Key:** `rtoSimulatorData`
+
+**Implementation:**
+```javascript
+// Initialize from localStorage
+const [data, setData] = useState(() => {
+  const saved = localStorage.getItem('rtoSimulatorData')
+  if (saved) {
+    try {
+      return JSON.parse(saved)
+    } catch (e) {
+      console.error("Failed to parse local storage data", e)
+    }
+  }
+  return defaultData
+})
+
+// Save to localStorage on every change
+useEffect(() => {
+  localStorage.setItem('rtoSimulatorData', JSON.stringify(data))
+}, [data])
+```
+
+**Stored Data Structure:**
+```json
+{
+  "monthlyOrders": 10000,
+  "averageOrderValue": 1500,
+  "codPercentage": 60,
+  "rtoPercentage": 30,
+  "forwardShippingCost": 60,
+  "returnShippingCost": 60,
+  "productCost": 500
+}
+```
+
+### Features
+
+- Values persist across browser sessions
+- Automatic fallback to defaults if parsing fails
+- Reset functionality restores defaults
+- Data is user-specific per browser/device
+
+### Clearing Persisted Data
+
+**Via Reset Button:**
+```javascript
+const handleReset = () => {
+  setData(defaultData)
+}
+```
+
+**Via Browser Console:**
+```javascript
+localStorage.removeItem('rtoSimulatorData')
+location.reload()
+```
+
+**Clear All Application Data:**
+```javascript
+localStorage.clear()
+location.reload()
+```
+
+---
+
+## Dark Mode Configuration
+
+The application supports light and dark themes with localStorage persistence.
+
+### Theme Persistence
+
+**Storage Key:** `rtoSimulatorTheme`
+
+**Implementation:**
+```javascript
+// Initialize theme from localStorage
+const [darkMode, setDarkMode] = useState(() => {
+  return localStorage.getItem('rtoSimulatorTheme') === 'dark'
+})
+
+// Apply theme to DOM
+useEffect(() => {
+  if (darkMode) {
+    document.body.setAttribute('data-theme', 'dark')
+    localStorage.setItem('rtoSimulatorTheme', 'dark')
+  } else {
+    document.body.removeAttribute('data-theme')
+    localStorage.setItem('rtoSimulatorTheme', 'light')
+  }
+}, [darkMode])
+```
+
+### Theme Toggle
+
+**UI Component:**
+```jsx
+<button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
+  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+</button>
+```
+
+### Theme Variables
+
+Theme colors are controlled via CSS custom properties that change based on `[data-theme="dark"]` attribute:
+
+**Light Theme (Default):**
+```css
+:root {
+  --primary-blue: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --surface-white: #ffffff;
+  --background: #f8fafc;
+  --border-color: #e2e8f0;
+}
+```
+
+**Dark Theme:**
+```css
+[data-theme="dark"] {
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --surface-white: #1e293b;
+  --background: #0f172a;
+  --border-color: #334155;
+}
+```
+
+---
+
+## Build Configuration
+
+The application uses Vite as the build tool.
+
+### Vite Configuration
+
+**File:** `vite.config.js`
+
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})
+```
+
+### Build Commands
+
+**Development Server:**
+```bash
+npm run dev
+# Starts at http://localhost:5173
+```
+
+**Production Build:**
+```bash
+npm run build
+# Outputs to /dist directory
+```
+
+**Preview Production Build:**
+```bash
+npm run preview
+```
+
+### Build Output
+
+- **Output Directory:** `dist/`
+- **Asset Optimization:** Minified JS, CSS, and images
+- **Code Splitting:** Automatic vendor chunking
+- **Browser Support:** Modern browsers (ES2015+)
+
+---
+
+## Environment Variables
+
+The application currently does not use environment variables. All configuration is hardcoded or stored in localStorage.
+
+### Adding Environment Variables
+
+If you need to add environment variables (e.g., for API keys or feature flags):
+
+**1. Create `.env` file:**
+```bash
+VITE_APP_TITLE=RTO Profit Simulator
+VITE_API_ENDPOINT=https://api.example.com
+```
+
+**2. Access in code:**
+```javascript
+const appTitle = import.meta.env.VITE_APP_TITLE
+const apiEndpoint = import.meta.env.VITE_API_ENDPOINT
+```
+
+**3. TypeScript types (optional):**
+```typescript
+interface ImportMetaEnv {
+  readonly VITE_APP_TITLE: string
+  readonly VITE_API_ENDPOINT: string
+}
+```
+
+---
+
+## View Mode State
+
+The application supports toggling between monthly and annual projections.
+
+### Implementation
+
+```javascript
+const [isAnnual, setIsAnnual] = useState(false)
+```
+
+**Toggle UI:**
+```jsx
+<button
+  className={`toggle-btn ${!isAnnual ? 'active' : ''}`}
+  onClick={() => setIsAnnual(false)}
+>
+  Monthly View
+</button>
+<button
+  className={`toggle-btn ${isAnnual ? 'active' : ''}`}
+  onClick={() => setIsAnnual(true)}
+>
+  Annual Projection
+</button>
+```
+
+**Effect on Calculations:**
+```javascript
+const metrics = calculateMetrics(data, isAnnual)
+// When isAnnual is true, all values are multiplied by 12
+```
+
+---
+
+## PDF Export Configuration
+
+The application supports exporting reports to PDF using `jsPDF` and `jspdf-autotable`.
+
+### Export Settings
+
+```javascript
+const exportToPDF = () => {
+  const pdf = new jsPDF('p', 'pt', 'a4')
+  const margin = 40
+  
+  // Configure tables
+  autoTable(pdf, {
+    theme: 'grid',
+    headStyles: { fillColor: [37, 99, 235] }, // Primary blue
+  })
+  
+  // Save file
+  pdf.save(`RTO-Simulator-Report-${isAnnual ? 'Annual' : 'Monthly'}.pdf`)
+}
+```
+
+### PDF Content
+
+1. **Header:** Title and export timestamp
+2. **Table 1:** Business Inputs
+3. **Table 2:** Financial Impact Overview
+4. **Table 3:** Optimization Projections (5%, 10%, 15% reduction)
+5. **Footer:** Disclaimer text
+
+### Customization Options
+
+**Change PDF Colors:**
+```javascript
+headStyles: { 
+  fillColor: [37, 99, 235],  // RGB for blue header
+  textColor: [255, 255, 255] // RGB for white text
+}
+```
+
+**Change Page Format:**
+```javascript
+const pdf = new jsPDF('l', 'pt', 'letter') // Landscape, letter size
+```
+
+**Add Logo or Branding:**
+```javascript
+pdf.addImage(logoBase64, 'PNG', margin, margin, 100, 50)
+```
+
+---
+
+## Customization Guide
+
+### Changing Default Values
+
+**Location:** `src/App.jsx:14-22`
+
+```javascript
+const defaultData = {
+  monthlyOrders: 5000,        // Change to your typical order volume
+  averageOrderValue: 2000,    // Adjust to your AOV
+  codPercentage: 50,          // Your COD percentage
+  // ... other values
+}
+```
+
+### Adjusting Risk Thresholds
+
+**Location:** `src/components/RiskMeter.jsx:4-9`
+
+```javascript
+const getRiskLevel = (rto) => {
+  if (rto <= 10) return { /* Healthy */ }
+  if (rto <= 20) return { /* Moderate */ }
+  if (rto <= 30) return { /* High */ }
+  return { /* Critical */ }
+}
+```
+
+### Modifying Insight Logic
+
+**Location:** `src/components/AIInsights.jsx:14-66`
+
+```javascript
+// Add new insight condition
+if (data.monthlyOrders > 50000) {
+  insights.push({
+    type: 'opportunity',
+    icon: <TrendingUp />,
+    title: 'High Volume Business',
+    message: 'Consider enterprise logistics solutions...'
+  })
+}
+```
+
+### Changing Currency and Locale
+
+**Current:** Indian Rupees (₹) with `en-IN` locale
+
+**To Change:**
+```javascript
+// Replace all instances of:
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(value)
+}
+```
+
+---
+
+## Performance Configuration
+
+### Animation Durations
+
+**CountUp Animation:**
+```javascript
+<CountUp end={value} duration={1.5} separator="," decimals={0} />
+```
+
+**Chart Transitions:**
+```css
+transition: stroke-dasharray 1s ease-out, stroke 1s ease-out;
+```
+
+### Optimization Tips
+
+1. **Memoize Expensive Calculations:**
+```javascript
+const metrics = useMemo(() => calculateMetrics(data, isAnnual), [data, isAnnual])
+```
+
+2. **Debounce Input Changes:**
+```javascript
+const debouncedChange = useMemo(
+  () => debounce(handleDataChange, 300),
+  []
+)
+```
+
+3. **Lazy Load Charts:**
+```javascript
+const VisualAnalytics = lazy(() => import('./components/VisualAnalytics'))
+```
+
+---
+
+## Browser Compatibility
+
+### Supported Browsers
+
+- Chrome/Edge: Latest 2 versions
+- Firefox: Latest 2 versions
+- Safari: Latest 2 versions
+- Mobile browsers: iOS Safari 12+, Chrome Android 90+
+
+### Required Features
+
+- ES2015+ JavaScript
+- CSS Custom Properties
+- LocalStorage API
+- Canvas API (for charts)
+
+### Polyfills
+
+No polyfills are currently included. For broader support, consider adding:
+
+```javascript
+import 'core-js/stable'
+import 'regenerator-runtime/runtime'
+```
+
+---
+
+## Deployment Configuration
+
+### Static Site Deployment
+
+**Vercel/Netlify:**
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Node version: 18.x or higher
+
+**Nginx Configuration:**
+```nginx
+location / {
+  try_files $uri $uri/ /index.html;
+}
+```
+
+**Apache Configuration:**
+```apache
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+```
+
+### Base Path Configuration
+
+If deploying to a subdirectory:
+
+```javascript
+// vite.config.js
+export default defineConfig({
+  base: '/rto-simulator/',
+  plugins: [react()],
+})
+```

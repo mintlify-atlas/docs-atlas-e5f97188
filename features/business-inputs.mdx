@@ -1,0 +1,127 @@
+---
+title: Business Inputs
+description: Configure your business parameters to calculate accurate RTO impact and profitability metrics
+---
+
+The Business Inputs section is where you configure all the operational parameters that drive the RTO calculations. Every metric in the simulator updates in real-time based on these inputs.
+
+## Component Location
+
+Implemented in: `src/components/InputSection.jsx:23-63`
+
+## Input Fields
+
+### Monthly Orders
+- **Default**: 10,000 orders
+- **Type**: Number (min: 0)
+- **Description**: Total number of orders processed per month across all payment methods
+- **Impact**: Base volume for calculating revenue, RTO orders, and total losses
+
+### Average Order Value (AOV)
+- **Default**: ₹1,500
+- **Type**: Currency (min: 0)
+- **Prefix**: ₹
+- **Description**: Mean value of each order placed
+- **Impact**: Used to calculate total revenue and realized revenue
+
+<Note>
+  Average Order Value should reflect the typical transaction value after discounts and before shipping costs.
+</Note>
+
+### COD Percentage
+- **Default**: 60%
+- **Type**: Percentage (min: 0, max: 100)
+- **Suffix**: %
+- **Description**: Percentage of orders placed using Cash on Delivery
+- **Impact**: Determines how many orders are at risk of RTO (only COD orders can become RTOs)
+
+### RTO Percentage
+- **Default**: 30%
+- **Type**: Percentage (min: 0, max: 100)
+- **Suffix**: %
+- **Description**: Percentage of COD orders that result in Return to Origin
+- **Impact**: Core metric for calculating RTO losses and break-even thresholds
+
+<Warning>
+  Industry benchmarks suggest a healthy RTO rate is below 15%. Rates above 25% significantly impact profitability.
+</Warning>
+
+### Forward Shipping Cost per Order
+- **Default**: ₹60
+- **Type**: Currency (min: 0)
+- **Prefix**: ₹
+- **Description**: Cost to ship each order from warehouse to customer
+- **Impact**: Included in RTO loss calculation for returned orders
+
+### Return Shipping Cost per RTO
+- **Default**: ₹60
+- **Type**: Currency (min: 0)
+- **Prefix**: ₹
+- **Description**: Cost to ship returned orders back to warehouse
+- **Impact**: Added to RTO loss per order (forward + return + product cost)
+
+### Product Cost per Order
+- **Default**: ₹500
+- **Type**: Currency (min: 0)
+- **Prefix**: ₹
+- **Description**: Cost of goods sold (COGS) for each order
+- **Impact**: Represents blocked inventory or potential loss for RTO orders
+
+## Validation Rules
+
+- All numeric fields accept only positive numbers or zero
+- Percentage fields are capped at 100%
+- Empty fields default to 0 (except percentage fields which retain their value)
+- Values are parsed as floats to support decimal inputs
+
+## Reset Functionality
+
+The "Reset" button (`InputSection.jsx:36-43`) restores all inputs to their default values:
+
+```jsx
+const handleReset = () => {
+  setData(defaultData);
+};
+```
+
+<Tip>
+  Use the Reset button to quickly return to example data if you want to compare different scenarios.
+</Tip>
+
+## Data Persistence
+
+All input values are automatically saved to browser `localStorage` (`App.jsx:43`) whenever they change, ensuring your configuration persists across sessions:
+
+```javascript
+useEffect(() => {
+  localStorage.setItem('rtoSimulatorData', JSON.stringify(data));
+}, [data]);
+```
+
+## Example Configuration
+
+Here's a sample configuration for a mid-sized e-commerce business:
+
+| Input | Value |
+|-------|-------|
+| Monthly Orders | 15,000 |
+| Average Order Value | ₹1,200 |
+| COD Percentage | 45% |
+| RTO Percentage | 18% |
+| Forward Shipping | ₹50 |
+| Return Shipping | ₹50 |
+| Product Cost | ₹400 |
+
+This would result in approximately 1,215 RTO orders per month with significant financial impact.
+
+## How Inputs Drive Calculations
+
+These inputs feed into the `calculateMetrics()` function (`calculations.js:1-57`) which computes:
+
+- **Total Revenue**: `monthlyOrders × averageOrderValue`
+- **COD Orders**: `monthlyOrders × (codPercentage / 100)`
+- **RTO Orders**: `codOrders × (rtoPercentage / 100)`
+- **RTO Loss per Order**: `forwardShippingCost + returnShippingCost + productCost`
+- **Total RTO Loss**: `rtoOrders × rtoLossPerOrder`
+
+See [Metrics Display](/features/metrics-display) for detailed calculation breakdowns.

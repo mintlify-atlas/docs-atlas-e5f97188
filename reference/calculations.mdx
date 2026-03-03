@@ -1,0 +1,316 @@
+---
+title: 'Calculations Reference'
+description: 'Complete reference for RTO calculation formulas and financial metrics'
+---
+
+## Overview
+
+The RTO Profit Simulator uses two primary calculation functions to analyze financial impact and simulate savings scenarios. All calculations are implemented in `src/utils/calculations.js`.
+
+## calculateMetrics()
+
+Calculates comprehensive financial metrics based on business inputs.
+
+### Function Signature
+
+```javascript
+calculateMetrics(data, isAnnual = false)
+```
+
+<ParamField path="data" type="object" required>
+  Business input data containing:
+  - `monthlyOrders` (number): Total orders per month
+  - `averageOrderValue` (number): Average order value in INR
+  - `codPercentage` (number): Percentage of COD orders (0-100)
+  - `rtoPercentage` (number): Percentage of RTO orders (0-100)
+  - `forwardShippingCost` (number): Forward shipping cost per order
+  - `returnShippingCost` (number): Return shipping cost per RTO
+  - `productCost` (number): Product cost per order
+</ParamField>
+
+<ParamField path="isAnnual" type="boolean" default="false">
+  Whether to calculate annual projections (multiplies monthly values by 12)
+</ParamField>
+
+### Return Values
+
+<ResponseField name="totalRevenue" type="number">
+  Total revenue if all orders were successful
+  
+  **Formula:** `monthlyOrders × averageOrderValue × multiplier`
+  
+  Where multiplier is 12 for annual view, 1 for monthly view.
+</ResponseField>
+
+<ResponseField name="codOrders" type="number">
+  Number of Cash on Delivery orders
+  
+  **Formula:** `Math.round(monthlyOrders × (codPercentage / 100)) × multiplier`
+</ResponseField>
+
+<ResponseField name="rtoOrders" type="number">
+  Number of Return to Origin orders
+  
+  **Formula:** `Math.round(codOrders × (rtoPercentage / 100)) × multiplier`
+</ResponseField>
+
+<ResponseField name="totalRtoLoss" type="number">
+  Total financial loss due to RTO orders
+  
+  **Formula:** `rtoOrders × (forwardShippingCost + returnShippingCost + productCost) × multiplier`
+  
+  This represents the complete loss per RTO order including:
+  - Forward shipping costs (already spent)
+  - Return shipping costs (recovery expense)
+  - Product cost (inventory blocked or lost)
+</ResponseField>
+
+<ResponseField name="netRealizedRevenue" type="number">
+  Actual revenue realized from delivered orders
+  
+  **Formula:** `(prepaidOrders + deliveredCodOrders) × averageOrderValue × multiplier`
+  
+  Where:
+  - `prepaidOrders = monthlyOrders - codOrders`
+  - `deliveredCodOrders = codOrders - rtoOrders`
+</ResponseField>
+
+<ResponseField name="netProfitAfterRto" type="number">
+  Net profit after accounting for RTO losses
+  
+  **Formula:** `netRealizedRevenue - totalRtoLoss`
+</ResponseField>
+
+<ResponseField name="breakEvenRtoPercentage" type="number">
+  Maximum sustainable RTO percentage before losses exceed profits
+  
+  **Formula:** `(profitPerSuccessfulOrder / (profitPerSuccessfulOrder + lossPerRtoOrder)) × 100`
+  
+  Where:
+  - `profitPerSuccessfulOrder = averageOrderValue - productCost - forwardShippingCost`
+  - `lossPerRtoOrder = productCost + forwardShippingCost + returnShippingCost`
+</ResponseField>
+
+### Calculation Steps
+
+The function performs calculations in the following order:
+
+1. **Order Distribution**
+   ```javascript
+   const codOrders = Math.round(monthlyOrders * (codPercentage / 100))
+   const prepaidOrders = monthlyOrders - codOrders
+   ```
+
+2. **RTO Impact**
+   ```javascript
+   const rtoOrders = Math.round(codOrders * (rtoPercentage / 100))
+   const deliveredCodOrders = codOrders - rtoOrders
+   ```
+
+3. **Loss Calculation**
+   ```javascript
+   const rtoLossPerOrder = forwardShippingCost + returnShippingCost + productCost
+   const totalRtoLoss = rtoOrders * rtoLossPerOrder
+   ```
+
+4. **Revenue Realization**
+   ```javascript
+   const netRealizedRevenue = (prepaidOrders + deliveredCodOrders) * averageOrderValue
+   ```
+
+5. **Profit Calculation**
+   ```javascript
+   const netProfitAfterRto = netRealizedRevenue - totalRtoLoss
+   ```
+
+6. **Break-Even Analysis**
+   ```javascript
+   const profitPerSuccessfulOrder = averageOrderValue - productCost - forwardShippingCost
+   const lossPerRtoOrder = productCost + forwardShippingCost + returnShippingCost
+   const breakEvenRtoPercentage = (profitPerSuccessfulOrder / (profitPerSuccessfulOrder + lossPerRtoOrder)) * 100
+   ```
+
+### Example Calculation
+
+Given the default business inputs:
+
+```javascript
+const data = {
+  monthlyOrders: 10000,
+  averageOrderValue: 1500,
+  codPercentage: 60,
+  rtoPercentage: 30,
+  forwardShippingCost: 60,
+  returnShippingCost: 60,
+  productCost: 500
+}
+
+const metrics = calculateMetrics(data, false)
+```
+
+**Step-by-step calculation:**
+
+1. Total Revenue: `10,000 × 1,500 = ₹15,000,000`
+2. COD Orders: `10,000 × 0.60 = 6,000`
+3. Prepaid Orders: `10,000 - 6,000 = 4,000`
+4. RTO Orders: `6,000 × 0.30 = 1,800`
+5. Delivered COD Orders: `6,000 - 1,800 = 4,200`
+6. RTO Loss per Order: `60 + 60 + 500 = ₹620`
+7. Total RTO Loss: `1,800 × 620 = ₹1,116,000`
+8. Net Realized Revenue: `(4,000 + 4,200) × 1,500 = ₹12,300,000`
+9. Net Profit: `12,300,000 - 1,116,000 = ₹11,184,000`
+10. Profit per Success: `1,500 - 500 - 60 = ₹940`
+11. Loss per RTO: `500 + 60 + 60 = ₹620`
+12. Break-Even RTO%: `(940 / (940 + 620)) × 100 = 60.3%`
+
+---
+
+## calculateSavings()
+
+Calculates potential savings from reducing RTO percentage.
+
+### Function Signature
+
+```javascript
+calculateSavings(data, reductionPercent, isAnnual = false)
+```
+
+<ParamField path="data" type="object" required>
+  Same business input data structure as `calculateMetrics()`
+</ParamField>
+
+<ParamField path="reductionPercent" type="number" required>
+  Absolute percentage points to reduce RTO by (e.g., 5 reduces 30% to 25%)
+</ParamField>
+
+<ParamField path="isAnnual" type="boolean" default="false">
+  Whether to calculate annual projections
+</ParamField>
+
+### Return Values
+
+<ResponseField name="savedOrders" type="number">
+  Number of orders saved from RTO
+  
+  **Formula:** `originalRtoOrders - newRtoOrders`
+</ResponseField>
+
+<ResponseField name="profitImprovement" type="number">
+  Additional profit gained from RTO reduction
+  
+  **Formula:** `newNetProfit - originalNetProfit`
+</ResponseField>
+
+### Implementation Logic
+
+The function uses absolute reduction (not relative):
+
+```javascript
+const newRtoPercentage = Math.max(0, data.rtoPercentage - reductionPercent)
+
+const originalMetrics = calculateMetrics(data, isAnnual)
+const newMetrics = calculateMetrics({ ...data, rtoPercentage: newRtoPercentage }, isAnnual)
+
+return {
+  savedOrders: originalMetrics.rtoOrders - newMetrics.rtoOrders,
+  profitImprovement: newMetrics.netProfitAfterRto - originalMetrics.netProfitAfterRto
+}
+```
+
+### Example Usage
+
+**Scenario:** Reduce RTO from 30% to 25% (5% reduction)
+
+```javascript
+const savings = calculateSavings(data, 5, false)
+// savedOrders: 300 orders
+// profitImprovement: ₹186,000
+```
+
+**Calculation breakdown:**
+- Original RTO orders: 1,800
+- New RTO orders (25%): 1,500
+- Orders saved: 300
+- Each saved order prevents ₹620 loss
+- Profit improvement: `300 × 620 = ₹186,000`
+
+---
+
+## Break-Even RTO Formula Explained
+
+The break-even RTO percentage is the critical threshold where your business neither makes nor loses money.
+
+### Mathematical Derivation
+
+Let:
+- **P** = Profit per successful delivery
+- **L** = Loss per RTO order
+- **R** = RTO percentage (break-even point)
+- **C** = Number of COD orders
+
+At break-even:
+```
+Total Profit = Total Loss
+C × (1 - R) × P = C × R × L
+(1 - R) × P = R × L
+P - R×P = R×L
+P = R×P + R×L
+P = R(P + L)
+R = P / (P + L)
+```
+
+As a percentage:
+```
+Break-Even RTO% = [P / (P + L)] × 100
+```
+
+### Practical Interpretation
+
+**If your current RTO% > Break-Even RTO%:**
+- You're losing more money on RTOs than making on deliveries
+- Every additional RTO pushes you into net loss
+- Immediate intervention required
+
+**If your current RTO% < Break-Even RTO%:**
+- Your business is still profitable despite RTOs
+- You have buffer room for growth
+- Focus on optimization to increase margins
+
+### Example
+
+With default values:
+- Profit per delivery: ₹940
+- Loss per RTO: ₹620
+- Break-even: `940 / (940 + 620) = 0.603 = 60.3%`
+
+**This means:**
+- At 60.3% RTO rate, you break even
+- At 30% RTO (current), you're still profitable
+- You have ~30% buffer before critical losses
+
+---
+
+## Usage in Application
+
+The calculations are used throughout the application:
+
+**In App.jsx:**
+```javascript
+import { calculateMetrics } from './utils/calculations'
+
+const metrics = calculateMetrics(data, isAnnual)
+```
+
+**In SimulationSection.jsx:**
+```javascript
+import { calculateSavings } from '../utils/calculations'
+
+const currentSavings = calculateSavings(data, sliderValue, isAnnual)
+```
+
+**In VisualAnalytics.jsx:**
+```javascript
+const projectedMetrics = calculateMetrics(reducedData)
+```
+
+All components receive either `data` (user inputs) or `metrics` (calculated outputs) as props to display financial insights.

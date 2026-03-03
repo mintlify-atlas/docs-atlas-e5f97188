@@ -1,0 +1,349 @@
+---
+title: PDF Export
+description: Generate comprehensive financial reports with business inputs, metrics, and optimization projections
+---
+
+The PDF Export feature allows you to generate professional reports containing all business inputs, calculated metrics, and optimization projections for sharing with stakeholders or record-keeping.
+
+## Component Location
+
+Implemented in: `App.jsx:67-140`
+
+## Libraries Used
+
+The PDF export functionality uses two libraries:
+
+```javascript
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+```
+
+- **jsPDF**: Core PDF generation library
+- **jspdf-autotable**: Plugin for creating formatted tables
+
+## How to Export
+
+Click the "Export Report" button in the top navigation bar:
+
+```jsx
+<button onClick={exportToPDF} className="btn-primary">
+  <Download size={20} />
+  <span>Export Report</span>
+</button>
+```
+
+**Code Reference**: `App.jsx:155-158`
+
+The PDF will automatically download with filename:
+- `RTO-Simulator-Report-Monthly.pdf` (Monthly view)
+- `RTO-Simulator-Report-Annual.pdf` (Annual view)
+
+<Tip>
+  Switch between Monthly and Annual views before exporting to generate reports with different time horizons.
+</Tip>
+
+## Report Structure
+
+The exported PDF contains four main sections:
+
+### 1. Header
+
+- **Title**: "RTO Risk & Profit Impact Simulator" (blue, 20pt font)
+- **Subtitle**: "Exported Financial Report" (gray, 10pt font)
+- **Branding**: Professional header with color-coded title
+
+**Code Reference**: `App.jsx:72-78`
+
+### 2. Business Inputs Table
+
+Shows all configuration parameters you entered:
+
+| Business Input | Value |
+|----------------|-------|
+| Monthly Orders | 10,000 |
+| Average Order Value | ₹1,500 |
+| COD Percentage | 60% |
+| RTO Percentage | 30% |
+| Forward Shipping/Order | ₹60 |
+| Return Shipping/RTO | ₹60 |
+| Product Cost/Order | ₹500 |
+
+**Table Style**: Grid theme with blue header (`fillColor: [37, 99, 235]`)
+
+**Code Reference**: `App.jsx:84-98`
+
+### 3. Financial Impact Overview Table
+
+Displays all calculated KPIs:
+
+| KPI Metric | Calculated Value |
+|------------|------------------|
+| Total Revenue | ₹1,50,00,000 |
+| COD Orders | 6,000 |
+| RTO Orders | 1,800 |
+| Total RTO Loss | ₹11,16,000 |
+| Realized Net Revenue | ₹1,38,84,000 |
+| Net Profit (Post-RTO) | ₹1,38,84,000 |
+| Break-Even RTO % | 60.3% |
+
+**Table Style**: Grid theme with blue header
+
+**Code Reference**: `App.jsx:100-115`
+
+<Info>
+  The Financial Impact table includes the break-even RTO percentage, which is a critical metric for long-term sustainability.
+</Info>
+
+### 4. Optimization Projections Table
+
+Shows potential monthly savings for three standard RTO reduction scenarios:
+
+| RTO Reduction Scenario | Potential Monthly Savings |
+|------------------------|---------------------------|
+| -5% RTO | ₹1,86,000 |
+| -10% RTO | ₹3,72,000 |
+| -15% RTO | ₹5,58,000 |
+
+**Table Style**: Grid theme with green header (`fillColor: [16, 185, 129]`)
+
+**Code Reference**: `App.jsx:117-132`
+
+#### Projection Calculation Logic
+
+```javascript
+const rtoReductions = [5, 10, 15];
+const projections = rtoReductions.map(reduction => {
+  const newRto = Math.max(0, data.rtoPercentage - reduction);
+  const newMetrics = calculateMetrics({ ...data, rtoPercentage: newRto });
+  const profitImprovement = newMetrics.netProfitAfterRto - metrics.netProfitAfterRto;
+  return [`-${reduction}% RTO`, formatMoney(profitImprovement)];
+});
+```
+
+This iterates through 5%, 10%, and 15% reductions, calculating the profit improvement for each scenario.
+
+<Note>
+  Optimization projections use the same logic as the interactive RTO Simulator, ensuring consistency across the application.
+</Note>
+
+### 5. Footer
+
+Disclaimer text:
+
+> "This simulator is for estimation purposes only."
+
+**Styling**: Small gray text at bottom of page
+
+**Code Reference**: `App.jsx:135-137`
+
+## Formatting Functions
+
+Two helper functions ensure consistent formatting throughout the PDF:
+
+### Currency Formatter
+
+```javascript
+const formatMoney = (val) => 
+  `Rs. ${new Intl.NumberFormat('en-IN').format(val)}`;
+```
+
+**Output**: `Rs. 11,16,000` (Indian numbering system with commas)
+
+### Number Formatter
+
+```javascript
+const formatNum = (val) => 
+  new Intl.NumberFormat('en-IN').format(val);
+```
+
+**Output**: `1,80,000` (for order counts and percentages)
+
+**Code Reference**: `App.jsx:80-81`
+
+## PDF Configuration
+
+```javascript
+const pdf = new jsPDF('p', 'pt', 'a4');
+```
+
+**Settings**:
+- **Orientation**: Portrait (`'p'`)
+- **Units**: Points (`'pt'`)
+- **Format**: A4 paper size
+- **Margin**: 40pt on all sides
+
+**Code Reference**: `App.jsx:68-69`
+
+## AutoTable Configuration
+
+All tables use the `autoTable` plugin with consistent configuration:
+
+```javascript
+autoTable(pdf, {
+  startY: pdf.lastAutoTable.finalY + 30, // 30pt spacing between tables
+  head: [['Column 1', 'Column 2']],
+  body: [...],
+  theme: 'grid',
+  headStyles: { fillColor: [37, 99, 235] }, // Blue header
+});
+```
+
+### Table Features
+
+- **Automatic Pagination**: Tables span multiple pages if needed
+- **Consistent Spacing**: 30pt gap between tables
+- **Grid Theme**: Professional bordered design
+- **Color-Coded Headers**: Blue for data, green for optimization projections
+
+<Warning>
+  Visual charts are NOT included in PDF exports. The PDF uses tables to represent all data instead.
+</Warning>
+
+## Use Cases
+
+### 1. Stakeholder Presentations
+
+Export reports to share RTO impact analysis with:
+- Executives and leadership teams
+- Investors or board members
+- Department heads (fulfillment, finance, operations)
+
+### 2. Historical Record-Keeping
+
+Save snapshots of your RTO performance over time:
+- Monthly financial reviews
+- Quarterly business reviews
+- Year-over-year comparisons
+
+### 3. Planning and Budgeting
+
+Use optimization projections to:
+- Set RTO reduction targets
+- Justify investments in fraud prevention or address verification
+- Calculate ROI for operational improvements
+
+### 4. Cross-Functional Collaboration
+
+Share reports with teams who don't have direct access to the simulator:
+- External consultants
+- Partner logistics providers
+- Remote team members
+
+## Example Workflow
+
+1. **Configure Inputs**: Enter your business parameters in the Business Inputs section
+2. **Review Metrics**: Verify that calculated metrics match your expectations
+3. **Toggle View**: Switch to Annual view if you want yearly projections
+4. **Export**: Click "Export Report" in the top navigation
+5. **Download**: PDF automatically downloads to your device
+6. **Share**: Email or present the report to stakeholders
+
+<Tip>
+  Generate both Monthly and Annual reports to provide different perspectives on the financial impact.
+</Tip>
+
+## Limitations
+
+### Charts Not Included
+
+Due to technical limitations with jsPDF, the visual analytics charts are not rendered in the PDF. However, all underlying data is represented in the tables.
+
+**Workaround**: Take screenshots of the Visual Analytics section if you need graphical representations in your report.
+
+### No Customization Options
+
+The PDF format is fixed—you cannot customize:
+- Layout or styling
+- Which sections to include/exclude
+- Table formatting or colors
+- Company branding or logos
+
+**Future Enhancement**: Consider adding a settings modal for PDF customization options.
+
+### Single Page vs. Multi-Page
+
+With default data, the report fits on a single page. With longer tables or additional data, jsPDF automatically handles pagination.
+
+## Technical Implementation Details
+
+### Y-Position Management
+
+```javascript
+autoTable(pdf, {
+  startY: pdf.lastAutoTable.finalY + 30,
+  // ...
+});
+```
+
+`pdf.lastAutoTable.finalY` tracks where the previous table ended, ensuring proper vertical spacing between sections.
+
+### Page Height Calculation
+
+```javascript
+pdf.text(
+  "Disclaimer text", 
+  margin, 
+  pdf.internal.pageSize.getHeight() - 20
+);
+```
+
+The footer is positioned 20pt from the bottom of the page, regardless of content length.
+
+**Code Reference**: `App.jsx:137`
+
+### File Naming Convention
+
+```javascript
+pdf.save(`RTO-Simulator-Report-${isAnnual ? 'Annual' : 'Monthly'}.pdf`);
+```
+
+Filename dynamically includes the current view mode for easy identification.
+
+## Performance Considerations
+
+- **Generation Time**: < 1 second for typical reports
+- **File Size**: ~20-50 KB (very lightweight)
+- **Browser Compatibility**: Works in all modern browsers (Chrome, Firefox, Safari, Edge)
+- **Mobile Support**: Fully functional on mobile devices
+
+## Security and Privacy
+
+- **Client-Side Only**: PDF generation happens entirely in the browser
+- **No Server Upload**: No data is sent to external servers
+- **No Tracking**: Export functionality does not track or log user data
+- **Local Storage**: Only saves input values to browser localStorage (optional)
+
+<Info>
+  Since all PDF generation is client-side, your business data never leaves your device—ensuring complete privacy.
+</Info>
+
+## Troubleshooting
+
+### PDF Won't Download
+
+- Check browser popup blocker settings
+- Ensure browser has permission to download files
+- Try a different browser
+
+### Incorrect Values in PDF
+
+- Verify your business inputs are correct before exporting
+- Check Monthly vs. Annual toggle matches your expectation
+- Refresh the page and re-enter data if values seem cached incorrectly
+
+### Formatting Issues
+
+- Indian Rupee symbol (₹) may not display correctly if system fonts don't support it
+- Numbers should use Indian numbering system (lakhs, crores)
+- If formatting looks wrong, try updating your browser
+
+## Future Enhancements
+
+Potential improvements for the PDF export feature:
+
+1. **Include Charts**: Find workaround to embed visual analytics in PDF
+2. **Custom Branding**: Allow users to add company logo and colors
+3. **Selective Export**: Choose which sections to include
+4. **Multiple Scenarios**: Compare multiple RTO reduction scenarios side-by-side
+5. **Historical Comparison**: Include data from previous exports for trend analysis
+6. **Email Integration**: Send reports directly via email
