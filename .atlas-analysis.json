@@ -1,0 +1,70 @@
+{
+  "projectType": "saas",
+  "projectName": "RTO Profit Simulator",
+  "projectDescription": "A financial simulation tool for e-commerce businesses to calculate and optimize Return to Origin (RTO) losses and profit impact.",
+  "theme": "mint",
+  "primaryColor": "#2563eb",
+  "lightColor": "#60a5fa",
+  "darkColor": "#1e40af",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart",
+          "installation"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/overview",
+          "features/business-inputs",
+          "features/metrics-display",
+          "features/rto-simulator",
+          "features/visual-analytics",
+          "features/pdf-export"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/understanding-rto",
+          "guides/use-cases",
+          "guides/interpreting-metrics",
+          "guides/optimization-strategies"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/calculations",
+          "reference/components",
+          "reference/configuration"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive RTO loss calculator with real-time metrics",
+    "Financial impact visualization with charts and graphs",
+    "RTO reduction simulator with profit projections",
+    "Break-even RTO percentage calculator",
+    "Monthly and annual view toggle",
+    "PDF export for financial reports",
+    "Dark mode support",
+    "Prepaid vs COD comparison analysis"
+  ],
+  "publicApiSurface": [
+    "calculateMetrics(data, isAnnual)",
+    "calculateSavings(data, reductionPercent, isAnnual)",
+    "InputSection component",
+    "MetricsDisplay component",
+    "SimulationSection component",
+    "VisualAnalytics component",
+    "AIInsights component",
+    "PrepaidComparison component",
+    "RiskMeter component"
+  ]
+}
